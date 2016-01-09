@@ -8,12 +8,23 @@
 const int frame_size = 17;
 
 // Seems to be stored in byte 3
-enum FrequencyEnum {
+enum FreqEnum {
 	FREQ_100HZ = 0x18, //24,
 	FREQ_120HZ = 0x38, //56,
 	FREQ_1KHZ = 0x58, //88,
 	FREQ_10KHZ = 0x78, //120,
 	FREQ_100KHZ = 0x98, //152,
+	
+	// TODO: Verify that this really is DC resistance measurement. Possibly rename to FREQ_0HZ?
+	FREQ_DCR_MEASUREMENT = 0xB8
+};
+
+// Seems to be stored in byte 10
+enum SModeEnum {
+	SMODE_EMPTY = 0,
+	SMODE_D = 1,
+	SMODE_Q = 2,
+	SMODE_QUESTIONMARK = 4,
 };
 
 void processFrame(const std::vector<uint8_t>&data, size_t next_start)
@@ -24,6 +35,24 @@ void processFrame(const std::vector<uint8_t>&data, size_t next_start)
 	{
 		std::cout << "ERROR: a zero in first byte\n";
 	}
+	
+	
+	switch (d[10])
+	{
+	case SMODE_EMPTY:
+		std::cout << " \t";
+		break;
+	case SMODE_D:
+		std::cout << "D\t";
+		break;
+	case SMODE_Q:
+		std::cout << "Q\t";
+		break;
+	case SMODE_QUESTIONMARK:
+		std::cout << "?\t";
+		break;
+	}
+	
 	
 	switch (d[3])
 	{
@@ -42,8 +71,11 @@ void processFrame(const std::vector<uint8_t>&data, size_t next_start)
 	case FREQ_100KHZ:
 		std::cout << "100KHz\n";
 		break;
+	case FREQ_DCR_MEASUREMENT:
+		std::cout << "0Hz\n";
+		break;
 	default:
-		std::cout << "ERROR: Unexpected byte in test frequency: " << int(d[3]);
+		std::cout << "ERROR: Unexpected byte in test frequency: " << int(d[3]) << "\n";
 		break;
 	}
 }
