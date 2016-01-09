@@ -7,6 +7,23 @@
 
 const int frame_size = 17;
 
+// Stored in byte 5
+enum MModeEnum {
+	MMODE_L = 1,
+	MMODE_C = 2,
+	MMODE_R = 3,
+	MMODE_DCR = 4, // WARNING: This mode don't have the p/s modifier
+};
+
+// Stored in byte 2, bit 7 and 6
+enum MModeModifier {
+	MMODE_MODIFIER_SERIAL = 0x40, // NOTE: It's this bit, not this value
+	MMODE_MODIFIER_PARALLEL = 0x80 // NOTE: It's this bit, not this value
+	
+	// TODO: There is also a bit, 0x20, which I don't know what it does yet (can be either way in both the Rs and the Ls mode)
+};
+
+
 // Seems to be stored in byte 3
 enum FreqEnum {
 	FREQ_100HZ = 0x18, //24,
@@ -33,8 +50,49 @@ void processFrame(const std::vector<uint8_t>&data, size_t next_start)
 	
 	if (d[0] != 0)
 	{
-		std::cout << "ERROR: a zero in first byte\n";
+		std::cout << "\nERROR: a zero in first byte\n";
 	}
+	
+	switch (d[5])
+	{
+	case MMODE_L:
+		std::cout << "L";
+		break;
+	case MMODE_C:
+		std::cout << "C";
+		break;
+	case MMODE_R:
+		std::cout << "R";
+		break;
+	case MMODE_DCR:
+		std::cout << "DCR";
+		break;
+	default:
+		std::cout << "\nERROR: Unexpected byte in MMode: " << int(d[5]) << "\n";
+	}
+	
+	if (d[5] == MMODE_DCR)
+	{
+		std::cout << "\t";
+	}
+	else
+	{
+		// Add parallel modifier
+		if (d[2] & MMODE_MODIFIER_PARALLEL)
+		{
+			std::cout << "p\t";
+		}
+		else if (d[2] & MMODE_MODIFIER_SERIAL)
+		{
+			std::cout << "s\t";
+		}
+		else
+		{
+			std::cout << "\nERROR: unknown serial/parallel modifier: " << int(d[5]) << "\n";
+		}
+	}
+	
+	
 	
 	
 	switch (d[10])
@@ -51,6 +109,8 @@ void processFrame(const std::vector<uint8_t>&data, size_t next_start)
 	case SMODE_QUESTIONMARK:
 		std::cout << "?\t";
 		break;
+	default:
+		std::cout << "\nERROR: Unexpected byte in SMode: " << int(d[10]) << "\n";
 	}
 	
 	
@@ -75,7 +135,7 @@ void processFrame(const std::vector<uint8_t>&data, size_t next_start)
 		std::cout << "0Hz\n";
 		break;
 	default:
-		std::cout << "ERROR: Unexpected byte in test frequency: " << int(d[3]) << "\n";
+		std::cout << "\nERROR: Unexpected byte in test frequency: " << int(d[3]) << "\n";
 		break;
 	}
 }
@@ -95,7 +155,7 @@ void process(const std::vector<uint8_t>& data)
 			
 			if (data[next_start] != 0)
 			{
-				std::cout << "WARNING: expected 0x0d 0x0a to be followed by 0x00\n";
+				std::cout << "\nWARNING: expected 0x0d 0x0a to be followed by 0x00\n";
 			}
 			
 			bool enoughBytes = next_start + frame_size < data.size();
