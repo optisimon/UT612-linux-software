@@ -92,6 +92,67 @@ void processFrame(const std::vector<uint8_t>&data, size_t next_start)
 		}
 	}
 	
+	// Handle error modifiers
+	if (d[9] == 0)
+	{
+		// NO ERROR - use the three preceeding bytes for measurement value
+		
+		int val = d[7] + d[6] * 256;
+		
+		std::cout
+		<< "val=" << val;
+		
+		
+		switch (d[8])
+		{
+		case 0x0a:
+			std::cout << "/100 Ohm\t";
+			break;
+		case 0x0b:
+			std::cout << "*1 Ohm\t";
+			break;
+		case 0x14:
+			std::cout << "/10000 KOhm\t";
+			break;
+		case 0x1a:
+			std::cout << "??? MOhm\t"; // TODO: only seen val=20000 and OL
+			break;
+		case 0x1b:
+			std::cout << "???? MOhm\t"; // TODO: Windows SW says MOhm. Ohm meter says /10000 MOhm 
+			break;
+			
+		case 0x29:
+			std::cout << "/10 uH\t";
+			break;
+		case 0x39:
+			std::cout << "/10 H\t";
+			break;
+			
+		case 0x49:
+			std::cout << "/10 pF\t";
+			break;	
+		case 0x59:
+			std::cout << "/10 uF ????\t"; // TODO: only seen val=20000 and OL
+			break;
+		case 0x00:
+			std::cout << "NOTHING\t"; // TODO: Empty field, and 
+			break;
+		default:
+			std::cout << "\nERROR: unknown unit: " << int(d[8]) << "\n";
+		}
+	}
+	else if (d[9] == 34)
+	{
+		std::cout << "-\t";
+	}
+	else if (d[9] == 195)
+	{
+		std::cout << "OL\t";
+	}
+	else
+	{
+		std::cout << "\nERROR: don't know what to do with error modifier: " << int(d[9]) << "\n";
+	}
 	
 	
 	
