@@ -53,5 +53,5 @@ fwrite(f, data, 'uint8' );
 fclose(f);
 " >> delme.m
 
-
+octave delme.m
 

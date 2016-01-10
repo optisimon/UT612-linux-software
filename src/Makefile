@@ -17,6 +17,10 @@ $(EXEC): $(OBJS) $(wildcard *.h)
 
 all:	$(EXEC)
 
+.PHONY: test
+test : all
+	cd unittests && ./shell_tests.sh
+
 install: $(EXEC)
 	install $(EXEC) "$(DESTDIR)"/usr/bin
 	
