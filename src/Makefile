@@ -23,9 +23,11 @@ test : all
 
 install: $(EXEC)
 	install $(EXEC) "$(DESTDIR)"/usr/bin
-	
+	install -m 644 70-ut612.rules "$(DESTDIR)"/etc/udev/rules.d/
+
 uninstall:
 	rm "$(DESTDIR)"/usr/bin/$(EXEC)
+	rm "$(DESTDIR)"/etc/udev/rules.d/70-ut612.rules
 
 clean:
 	rm -f $(EXEC) $(OBJS)

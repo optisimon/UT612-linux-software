@@ -1,0 +1,6 @@
+#
+# Udev rule for UT612 LCR meter (so sudo privileges won't be needed for running the logging tool)
+#
+
+# HIDAPI/hidraw
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea80", MODE="0666"
