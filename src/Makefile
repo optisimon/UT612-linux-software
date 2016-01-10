@@ -3,7 +3,7 @@ DESTDIR?=""
 INCLUDE=
 LIBS=
 
-OBJS= main.o
+OBJS= main.o UT612ByteStreamParser.o
 
 EXEC= ut612
 
