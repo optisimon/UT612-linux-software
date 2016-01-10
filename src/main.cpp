@@ -230,9 +230,9 @@ void process(const std::vector<uint8_t>& data)
 	}	
 }
 
-int main (int argc, char* argv[])
+void processFile(std::string file)
 {
-	std::ifstream in("/dev/stdin", std::ios::binary);
+	std::ifstream in(file.c_str(), std::ios::binary);
 	
 	std::vector<uint8_t> data;
 	char c;
@@ -247,6 +247,19 @@ int main (int argc, char* argv[])
 	}
 	
 	in.close();
+}
+
+
+int main (int argc, char* argv[])
+{
+	if (argc == 2)
+	{
+		processFile(argv[1]);
+	}
+	else
+	{
+		processFile("/dev/stdin");
+	}
 	
 	return 0;
 }
