@@ -82,13 +82,13 @@ void processFrame(const std::vector<uint8_t>&data, size_t next_start)
 		{
 			std::cout << "p\t";
 		}
-		else if (d[2] & MMODE_MODIFIER_SERIAL)
+		else if (d[2] & MMODE_MODIFIER_SERIAL || (d[2] == 0)) // TODO: Figure out real rule. Maybe only top bit matters
 		{
 			std::cout << "s\t";
 		}
 		else
 		{
-			std::cout << "\nERROR: unknown serial/parallel modifier: " << int(d[5]) << "\n";
+			std::cout << "\nERROR: unknown serial/parallel modifier: " << int(d[2]) << "\n";
 		}
 	}
 	
