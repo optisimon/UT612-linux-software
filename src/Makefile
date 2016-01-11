@@ -1,15 +1,16 @@
 DESTDIR?=""
 
 INCLUDE=
-LIBS=
+LIBS_UDEV= `pkg-config libudev --libs` -lrt
+LIBS= -lusb-1.0 $(LIBS_UDEV)
 
-OBJS= main.o UT612ByteStreamParser.o
+OBJS= main.o UT612ByteStreamParser.o UT612ByteSource.o hidapi/hid.o
 
 EXEC= ut612
 
 COMPILER_FLAGS+= -Wall -O3
 
-$(EXEC): $(OBJS) $(wildcard *.h)
+$(EXEC): $(OBJS) $(wildcard *.h) $(wildcard *.hpp)
 	$(CXX) $(COMPILER_FLAGS) -o $(EXEC) $(OBJS) $(LIBS)
 
 %.o:	%.cpp
@@ -28,6 +29,9 @@ install: $(EXEC)
 uninstall:
 	rm "$(DESTDIR)"/usr/bin/$(EXEC)
 	rm "$(DESTDIR)"/etc/udev/rules.d/70-ut612.rules
+
+prepare:
+	apt-get install libudev-dev
 
 clean:
 	rm -f $(EXEC) $(OBJS)

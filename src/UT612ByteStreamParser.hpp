@@ -2,24 +2,28 @@
  * UT612ByteStreamParser.hpp
  *
  *  Created on: Jan 10, 2016
- *      Author: simon
+ *
+ *  Copyright (c) 2016 Simon Gustafsson (www.optisimon.com)
  */
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <stdint.h>
 
-class UT612ByteStreamParser {
+#include "IByteSink.hpp"
+
+#include <stdint.h>
+#include <vector>
+#include <cstddef>
+
+class UT612ByteStreamParser : public IByteSink {
 public:
 	UT612ByteStreamParser();
 
-	std::string processByte(uint8_t byte);
-
-	void processFrame(const std::vector<uint8_t>&data, size_t next_start);
+	void processByte(uint8_t byte);
 
 private:
+	void processFrame(const std::vector<uint8_t>&data, size_t next_start);
+
 	bool _frameInProgress;
 	bool _lastByteWasCarriageReturn;
 	size_t _byteCount;

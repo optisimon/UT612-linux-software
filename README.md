@@ -4,10 +4,8 @@ This is a work in progress to add linux support for the  UNI-T UT612 LCR meter
 
 ## Current status:
 
- - currently not running live, only running on binary data dumps.
- - Parses binary data sets collected using usb sniffing on a windows computer
- - Also parses binary data collected on a linux computer using an USB-HID-Uart
-   example application
+ - Can run live on a linux system against the UT612 LCR Meter.
+ - Can run against offline data sets collected using usb sniffing on a windows computer.
  - Interprets the primary measurement value for all resistance measurements
  - Keeping the likely readout bug in the windows software at the moment until
    I have verified with large resistors that the LCR meter is right and the
@@ -26,15 +24,32 @@ This is a work in progress to add linux support for the  UNI-T UT612 LCR meter
 
 Use at your own risk, especially since no protocol specifications or
 source code was available, and they've choosen to use a binary protocol
-instead of a clear text protocol.
+instead of a clear text protocol. Something as simple as a low battery warning
+could potentially stop me from parsing the data :)
+
+
+## Other software
+I'm using the hidapi library from Signal 11 Software (http://github.com/signal11/hidapi)
+to communicate with the UT612 LCR Meter. The main reasons for using that is
+
+1) Nice license options (GPL3, BSD, as well as just embedding their code directly)
+
+2) The library can communicate to hid devices under linux using either libusb or the
+   kernels hidraw interface.
+
+3) I chose to only use the hidraw interface, but still have the hidapi library as a
+   middle man if I ever would port the software to windows, or would want to use the
+   libusb library as a backend instead (for embedded platforms running ancient kernel
+   versions)
+
+4) Nothing I've tried could get the UART to appear as a regular device node under
+   ubuntu 14.04.
+
 
 ## License
 
-Not detecided yet, just clearly mention me as the source if this gets reused.
-
-This repository is likely to be tainted by third party source code if it's way
-easier or feels more reliable to use those than it would be to use libusb directly,
-unless some slightly newer kernel natively supports the USB-HID-Uart chip used by
-this product.
+Just clearly mention me as the source if this gets reused, and
+don't remove any of the copyright notices from any of the source files.
 
 Copyright (c) 2016 Simon Gustafsson (www.optisimon.com)
+

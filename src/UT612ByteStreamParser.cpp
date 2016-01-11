@@ -2,7 +2,8 @@
  * UT612ByteStreamParser.cpp
  *
  *  Created on: Jan 10, 2016
- *      Author: simon
+ *
+ *  Copyright (c) 2016 Simon Gustafsson (www.optisimon.com)
  */
 
 #include "UT612ByteStreamParser.hpp"
@@ -216,7 +217,7 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 	}
 }
 
-std::string UT612ByteStreamParser::processByte(uint8_t byte)
+void UT612ByteStreamParser::processByte(uint8_t byte)
 {
 	_byteCount++;
 
@@ -248,6 +249,4 @@ std::string UT612ByteStreamParser::processByte(uint8_t byte)
 	}
 
 	_lastByteWasCarriageReturn = (byte == 0x0d);
-
-	return "";
 }
