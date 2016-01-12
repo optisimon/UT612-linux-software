@@ -110,7 +110,7 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 	}
 
 	// Handle error modifiers
-	if (d[9] == 0)
+	if (d[9] == 0 || d[9] == 128) // TODO: 128 first seen when measuring Cs, approx 790uF. No clue what it means
 	{
 		// NO ERROR - use the three preceeding bytes for measurement value
 
@@ -126,17 +126,29 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 			std::cout << "/100 Ohm\t";
 			break;
 		case 0x0b:
-			std::cout << "*1 Ohm\t";
+			std::cout << "/1000 Ohm\t";
+			break;
+		case 0x12:
+			std::cout << "/100 KOhm\t";
+			break;
+		case 0x13:
+			std::cout << "/1000 KOhm\t";
 			break;
 		case 0x14:
 			std::cout << "/10000 KOhm\t";
 			break;
 		case 0x1a:
-			std::cout << "??? MOhm\t"; // TODO: only seen val=20000 and OL
+			std::cout << "/100 MOhm\t"; // TODO: Verify
 			break;
 		case 0x1b:
-			std::cout << "???? MOhm\t"; // TODO: Windows SW says MOhm. Ohm meter says /10000 MOhm
+			// TODO: inform UNI-T? Windows SW says *1 MOhm. Ohm meter says /1000 MOhm.
+			// (Verified that Ohm meter is correct with a 10 MOhm resistor)
+			std::cout << "/1000 MOhm\t";
 			break;
+		case 0x1c:
+			std::cout << "/10000 MOhm\t";
+			break;
+
 
 		case 0x29:
 			std::cout << "/10 uH\t";
@@ -151,6 +163,14 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 		case 0x59:
 			std::cout << "/10 uF ????\t"; // TODO: only seen val=20000 and OL
 			break;
+
+		case 0x52:
+			std::cout << "/100 nF\t"; // TODO: verify
+			break;
+		case 0x53:
+			std::cout << "/1000 nF\t"; // TODO: verify
+			break;
+
 		case 0x00:
 			std::cout << "NOTHING\t"; // TODO: Empty field, and
 			break;
