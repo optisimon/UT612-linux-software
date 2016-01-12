@@ -9,6 +9,7 @@
 #include "UT612ByteStreamParser.hpp"
 
 #include <iostream>
+#include <sstream>
 
 UT612ByteStreamParser::UT612ByteStreamParser()
  : _frameInProgress(false),
@@ -116,67 +117,72 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 
 		int val = d[7] + d[6] * 256;
 
-		std::cout
-		<< "val=" << val;
 
+		size_t numDecimals = d[8] & 0x07;
 
-		switch (d[8])
+		std::ostringstream oss;
+		oss << val;
+		std::string s = "00000" + oss.str();
+
+		if (numDecimals-1 < s.length() && numDecimals > 0)
 		{
-		case 0x0a:
-			std::cout << "/100 Ohm\t";
-			break;
-		case 0x0b:
-			std::cout << "/1000 Ohm\t";
-			break;
-		case 0x12:
-			std::cout << "/100 KOhm\t";
-			break;
-		case 0x13:
-			std::cout << "/1000 KOhm\t";
-			break;
-		case 0x14:
-			std::cout << "/10000 KOhm\t";
-			break;
-		case 0x1a:
-			std::cout << "/100 MOhm\t"; // TODO: Verify
-			break;
-		case 0x1b:
-			// TODO: inform UNI-T? Windows SW says *1 MOhm. Ohm meter says /1000 MOhm.
-			// (Verified that Ohm meter is correct with a 10 MOhm resistor)
-			std::cout << "/1000 MOhm\t";
-			break;
-		case 0x1c:
-			std::cout << "/10000 MOhm\t";
-			break;
+			s.insert(s.length() - numDecimals, ".");
 
+			while (s.length()> 1 && s[0] == '0' && s[1] != '.')
+			{
+				s = s.substr(1);
+			}
 
-		case 0x29:
-			std::cout << "/10 uH\t";
-			break;
-		case 0x39:
-			std::cout << "/10 H\t";
-			break;
-
-		case 0x49:
-			std::cout << "/10 pF\t";
-			break;
-		case 0x59:
-			std::cout << "/10 uF ????\t"; // TODO: only seen val=20000 and OL
-			break;
-
-		case 0x52:
-			std::cout << "/100 nF\t"; // TODO: verify
-			break;
-		case 0x53:
-			std::cout << "/1000 nF\t"; // TODO: verify
-			break;
-
-		case 0x00:
-			std::cout << "NOTHING\t"; // TODO: Empty field, and
-			break;
-		default:
-			std::cout << "\nERROR: unknown unit: " << int(d[8]) << "\n";
+			std::cout << s << " ";
 		}
+		else
+		{
+			std::cout << "\nERROR: don't know what to do with numDecimals=" << numDecimals << ", val=" << val << "\n";
+		}
+
+		int unit = d[8] >> 3;
+
+		switch(unit)
+		{
+		case 1:
+			std::cout << "Ohm";
+			break;
+		case 2:
+			std::cout << "kOhm";
+			break;
+		case 3:
+			std::cout << "MOhm";
+			break;
+
+
+		case 5:
+			std::cout << "uH";
+			break;
+		case 6:
+			std::cout << "mH";
+			break;
+		case 7:
+			std::cout << "H";
+			break;
+
+
+		case 9:
+			std::cout << "pF";
+			break;
+		case 10:
+			std::cout << "nF";
+			break;
+		case 11:
+			std::cout << "uF";
+			break;
+
+		default:
+			std::cout << "\nERROR: unknown unit " << unit << " (" << int(d[8]) << ")\n";
+			break;
+		}
+		std::cout << "\t";
+
+
 	}
 	else if (d[9] == 34)
 	{
