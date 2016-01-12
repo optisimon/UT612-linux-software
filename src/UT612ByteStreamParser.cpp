@@ -56,6 +56,7 @@ enum SModeEnum {
 	SMODE_EMPTY = 0,
 	SMODE_D = 1,
 	SMODE_Q = 2,
+	SMODE_ESR = 3,
 	SMODE_QUESTIONMARK = 4,
 };
 
@@ -183,6 +184,9 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 	case SMODE_Q:
 		std::cout << "Q\t";
 		break;
+	case SMODE_ESR:
+		std::cout << "ESR\t";
+		break;
 	case SMODE_QUESTIONMARK:
 		std::cout << "?\t";
 		break;
@@ -194,27 +198,29 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 	switch (d[3])
 	{
 	case FREQ_100HZ:
-		std::cout << "100Hz\n";
+		std::cout << "100Hz";
 		break;
 	case FREQ_120HZ:
-		std::cout << "120Hz\n";
+		std::cout << "120Hz";
 		break;
 	case FREQ_1KHZ:
-		std::cout << "1KHz\n";
+		std::cout << "1KHz";
 		break;
 	case FREQ_10KHZ:
-		std::cout << "10KHz\n";
+		std::cout << "10KHz";
 		break;
 	case FREQ_100KHZ:
-		std::cout << "100KHz\n";
+		std::cout << "100KHz";
 		break;
 	case FREQ_DCR_MEASUREMENT:
-		std::cout << "0Hz\n";
+		std::cout << "0Hz";
 		break;
 	default:
 		std::cout << "\nERROR: Unexpected byte in test frequency: " << int(d[3]) << "\n";
 		break;
 	}
+
+	std::cout << "\n";
 }
 
 void UT612ByteStreamParser::processByte(uint8_t byte)

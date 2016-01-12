@@ -15,6 +15,7 @@
 #include <vector>
 #include <cstddef>
 
+
 class UT612ByteStreamParser : public IByteSink {
 public:
 	UT612ByteStreamParser();
