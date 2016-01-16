@@ -47,6 +47,8 @@ private:
 
 	int setupUartForUT612(hid_device* handle);
 
+	int enableUartForUT612(hid_device* handle, bool enabled=true);
+
 	/** Setup capturing of Ctrl-C pressed (SIGINT) */
 	void setupSIGINTHandler();
 

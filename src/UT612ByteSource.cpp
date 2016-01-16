@@ -68,6 +68,8 @@ int UT612ByteSource::run()
 
 	setupUartForUT612(handle);
 
+	enableUartForUT612(handle);
+
 
 	//
 	// Main loop
@@ -103,6 +105,9 @@ int UT612ByteSource::run()
 			}
 		}
 	}
+
+	enableUartForUT612(handle, false);
+
 	printf("\nKilled by user\n");
 
 
@@ -190,6 +195,23 @@ int UT612ByteSource::setupUartForUT612(hid_device* handle)
 	if (result == -1)
 	{
 		printf("\nERROR: setupUartForUT612: hid device transfer failed!\n");
+	}
+
+	return result;
+}
+
+#define GETSET_UART_ENABLE	0x41
+int UT612ByteSource::enableUartForUT612(hid_device* handle, bool enabled)
+{
+	uint8_t report[64] = {
+			GETSET_UART_ENABLE,
+			uint8_t(enabled ? 1:0)
+	}; // zero initialization of the rest of the elements
+
+	int result = hid_send_feature_report(handle, report, sizeof(report));
+	if (result == -1)
+	{
+		printf("\nERROR: enableUartForUT612: hid device transfer failed!\n");
 	}
 
 	return result;
