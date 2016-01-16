@@ -2,6 +2,9 @@
 This project adds Ubuntu 14.04 support for the UNI-T UT612 LCR meter.
 It may work with other Debian based distros as well.
 
+It's still under active development, but is completely usable in its
+current form.
+
 
 ## Current status:
 
@@ -19,21 +22,6 @@ It may work with other Debian based distros as well.
  - Can run against offline data sets collected using usb sniffing on a
    windows computer (i.e. to get bit-identical input to that used by
    UNI-T:s windows software)
-
-
-## Next improvement area
-
-One remaining problem is getting everything to work magically for everybody
-(or at least users of ubuntu 14.04).
-
-The USB UART chip used in the multimeter complicates it. It's
-supposed to act as a HID device, but depending on how the computer detects it,
-it can decide to incorrectly set it up as a serial port (with drivers newer
-intended to work with that chip).
-
-For me, everything works perfectly while I'm connecting using my USB3 hub.
-But when connecting the LCR meter to one of the front ports on my computer,
-I won't get access to the LCR meter in the way I need.
 
 
 ## Installing:
