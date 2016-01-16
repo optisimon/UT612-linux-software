@@ -192,11 +192,14 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 	{
 		std::cout << "OL\t";
 	}
+	else if (d[9] == 67)
+	{
+		std::cout << "OL\t"; // TODO: this also sets secondary reading to "----". Seen for Lp, OL. H, secondary reading Q
+	}
 	else
 	{
-		std::cout << "\nERROR: don't know what to do with error modifier: " << int(d[9]) << "\n";
+		std::cout << "\nERROR: don't know what to do with error modifier d[9]: " << int(d[9]) << "\n";
 	}
-
 
 
 	switch (d[10])
@@ -214,10 +217,94 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 		std::cout << "ESR\t";
 		break;
 	case SMODE_QUESTIONMARK:
-		std::cout << "?\t";
+		if (d[5] == MMODE_C || d[5] == MMODE_L)
+		{
+			std::cout << "theta\t";
+		}
+		else
+		{
+			std::cout << "?\t";
+		}
 		break;
 	default:
 		std::cout << "\nERROR: Unexpected byte in SMode: " << int(d[10]) << "\n";
+	}
+
+
+	if (d[14] == 0 || d[14] == 128) // TODO: JUST GUESSING
+	{
+		int sval = int16_t(d[12] + d[11]*256);
+		//std::cout << "sval=" << sval << "\t";
+
+		size_t numDecimals = d[13] & 0x07;
+
+
+		// TODO: if numdecimals is set to 4, then the windows software only shows the first 3 digits after the decimal
+		// TODO: and if val=65535, and numdecimals set to 1, then the windows software only shows 6553, not 6553.5
+		std::ostringstream oss;
+		oss << sval;
+		std::string s = "00000" + oss.str();
+
+		if (numDecimals-1 < s.length() && numDecimals > 0)
+		{
+			s.insert(s.length() - numDecimals, ".");
+
+			while (s.length()> 1 && s[0] == '0' && s[1] != '.')
+			{
+				s = s.substr(1);
+			}
+
+			std::cout << s << " ";
+		}
+		else
+		{
+			std::cout << "\nERROR: don't know what to do with numDecimals=" << numDecimals << ", sval=" << sval << "\n";
+		}
+	}
+	else if (d[14] == 162)
+	{
+		std::cout << "-\t";
+	}
+	else if (d[14] == 129)
+	{
+		std::cout << "\t";
+	}
+	else if (d[14] == 195)
+	{
+		std::cout << "OL\t";
+	}
+	else
+	{
+		std::cout << "\nERROR: don't know what to do with d[14]=" << int(d[14]) << "\n";
+	}
+
+	int sunit = d[13] >> 3;
+
+	switch(sunit)
+	{
+	case 0x00:
+		std::cout << "\t";
+		break;
+
+	case 0x01:
+		std::cout << "Ohm\t";
+		break;
+
+	case 0x02:
+		std::cout << "kOhm\t";
+		break;
+
+	case 0x03:
+		std::cout << "MOhm\t";
+		break;
+
+	case 0x0e:
+		std::cout << "Deg\t";
+		break;
+
+	default:
+		std::cout << "\nERROR: don't know what to do with sunit=" << sunit << "\n";
+		break;
 	}
 
 
