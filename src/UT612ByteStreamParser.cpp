@@ -74,7 +74,7 @@ enum SModeEnum {
 	SMODE_D = 1,
 	SMODE_Q = 2,
 	SMODE_ESR = 3,
-	SMODE_QUESTIONMARK = 4,
+	SMODE_THETA = 4,
 };
 
 void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t next_start)
@@ -234,15 +234,17 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 	case SMODE_ESR:
 		std::cout << "ESR\t";
 		break;
-	case SMODE_QUESTIONMARK:
-		if (d[5] == MMODE_C || d[5] == MMODE_L)
-		{
-			std::cout << "theta\t";
-		}
-		else
-		{
-			std::cout << "?\t";
-		}
+	case SMODE_THETA:
+		std::cout << "theta\t";
+//		if (d[5] == MMODE_C || d[5] == MMODE_L)
+//		{
+//			std::cout << "theta\t";
+//		}
+//		else
+//		{
+//			std::cout << "?\t"; // The windows software displays a question mark here if running in full Auto mode.
+//			// Example: Rs, meter shows theta and -0.7 deg, but windows software shows theta and 6552, and windows software logs ? 6552 Deg
+//		}
 		break;
 	default:
 		std::cout << "\nERROR: Unexpected byte in SMode: " << int(d[10]) << "\n";
