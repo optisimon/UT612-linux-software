@@ -175,7 +175,9 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 		case 11:
 			std::cout << "uF";
 			break;
-
+		case 12:
+			std::cout << "mF";
+			break;
 		default:
 			std::cout << "\nERROR: unknown unit " << unit << " (" << int(d[8]) << ")\n";
 			break;
