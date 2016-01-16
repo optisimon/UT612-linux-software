@@ -24,7 +24,7 @@ void process(const std::vector<uint8_t>& data)
 	//
 	// Simulate stream processing
 	//
-	UT612ByteStreamParser p;
+	UT612ByteStreamParser p(/* doTimestamp */ false);
 	for (size_t i = 0; i < data.size()-2; i++)
 	{
 		p.processByte(data[i]);
@@ -54,7 +54,7 @@ void processFile(std::string file)
 
 int processUSB()
 {
-	UT612ByteStreamParser parser;
+	UT612ByteStreamParser parser(/* doTimestamp */ true);
 
 	UT612ByteSource byteSource;
 

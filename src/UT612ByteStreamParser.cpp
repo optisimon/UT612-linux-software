@@ -10,14 +10,30 @@
 
 #include <iostream>
 #include <sstream>
+#include <string>
 
-UT612ByteStreamParser::UT612ByteStreamParser()
- : _frameInProgress(false),
-   _lastByteWasCarriageReturn(false),
-   _byteCount(0),
-   _lastFrameByteCount(0),
-   _frameCount(0)
-{ }
+#include <sys/time.h>
+#include <stdio.h>
+
+
+UT612ByteStreamParser::UT612ByteStreamParser(bool doTimestamp)
+: _doTimestamp(doTimestamp),
+  _frameInProgress(false),
+  _lastByteWasCarriageReturn(false),
+  _byteCount(0),
+  _lastFrameByteCount(0),
+  _frameCount(0)
+{
+	// Print a column header for all the measurements
+	std::cout << "NO\t";
+
+	if (_doTimestamp)
+	{
+		std::cout << "Time\t";
+	}
+
+	std::cout << "MMode\tMValue\tMUnit\tSMode\tSValue\tSUnit\tFreq\n";
+}
 
 
 const int frame_size = 17;
@@ -338,6 +354,7 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 	std::cout << "\n";
 }
 
+
 void UT612ByteStreamParser::processByte(uint8_t byte)
 {
 	_byteCount++;
@@ -359,10 +376,16 @@ void UT612ByteStreamParser::processByte(uint8_t byte)
 		}
 		_lastFrameByteCount = _byteCount;
 
+
 		//
 		// Process the frame
 		//
-		std::cout << "n = " << _frameCount++ << " ==> ";
+		std::cout << _frameCount++ << "\t";
+
+		if (_doTimestamp)
+		{
+			std::cout << getCurrentTime() << "\t";
+		}
 
 		processFrame(_buffer, _buffer.size() - frame_size);
 
@@ -370,4 +393,35 @@ void UT612ByteStreamParser::processByte(uint8_t byte)
 	}
 
 	_lastByteWasCarriageReturn = (byte == 0x0d);
+}
+
+
+std::string UT612ByteStreamParser::getCurrentTime()
+{
+	const bool appendMilliseconds = true;
+
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	time_t rawtime = tv.tv_sec;
+
+	tm timeinfo;
+	tm * result = localtime_r(&rawtime, &timeinfo);
+
+	if (result == 0)
+	{
+		return ""; // TODO: should we assert? or print to stderr? or throw exception?
+	}
+
+	char buffer [64];
+	strftime (buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", result);
+
+	std::string retval = buffer;
+
+	if (appendMilliseconds)
+	{
+		snprintf(buffer, sizeof(buffer), ".%03d", int(tv.tv_usec / 1000));
+		retval += buffer;
+	}
+
+	return retval;
 }
