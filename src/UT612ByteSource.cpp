@@ -23,6 +23,9 @@ static void sigint_handler(int)
 	killed = true;
 }
 
+UT612ByteSource::UT612ByteSource(bool verbose) : _verbose(verbose)
+{ }
+
 
 void UT612ByteSource::registerByteSink(IByteSink& sink)
 {
@@ -33,8 +36,6 @@ void UT612ByteSource::registerByteSink(IByteSink& sink)
 int UT612ByteSource::run()
 {
 	setupSIGINTHandler(); // Catch Ctrl-C
-
-	bool verbose = true; // TODO: Set in ctor?
 
 
 	//
@@ -53,7 +54,7 @@ int UT612ByteSource::run()
 	{
 		printf("unable to connect to the UT612 LCR Meter\n");
 
-		if (verbose)
+		if (_verbose)
 		{
 			printAllHidDevices();
 		}
@@ -61,7 +62,7 @@ int UT612ByteSource::run()
 		return 1;
 	}
 
-	if (verbose)
+	if (_verbose)
 	{
 		printHidDeviceInfo(handle);
 	}
@@ -85,7 +86,7 @@ int UT612ByteSource::run()
 		{
 			printf("\nERROR: hid_read_timeout returned -1\n");
 		}
-		else if (read == 0 && verbose)
+		else if (read == 0 && _verbose)
 		{
 			printf("\nERROR: timed out calling hid_read_timeout\n");
 		}

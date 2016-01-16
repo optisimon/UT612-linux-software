@@ -19,6 +19,7 @@ typedef struct hid_device_ hid_device;
 
 class UT612ByteSource {
 public:
+	UT612ByteSource(bool verbose = false);
 	/**
 	 * Register a byte sink to be passed every byte read out from the
 	 * UT612 LCR Meter.
@@ -55,5 +56,6 @@ private:
 	/** Forward a byte to all registered byte sinks */
 	void notifyAllByteSinks(uint8_t byte);
 
+	bool _verbose;
 	std::set<IByteSink*> _byteSinks;
 };
