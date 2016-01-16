@@ -1,23 +1,93 @@
 # UT612-linux-software
-This is a work in progress to add linux support for the  UNI-T UT612 LCR meter
+This project adds Ubuntu 14.04 support for the UNI-T UT612 LCR meter.
+It may work with other Debian based distros as well.
 
 
 ## Current status:
 
  - Can run live on a linux system against the UT612 LCR Meter.
- - Can run against offline data sets collected using usb sniffing on a windows computer.
- - Interprets the primary measurement value for all resistance measurements
- - Keeping the likely readout bug in the windows software at the moment until
-   I have verified with large resistors that the LCR meter is right and the
-   windows software wrong.
- - Handles readings slightly different than the windows software, since that
-   felt much more sensible. That affects one reading when measurement mode
-   on the LCR meter is switched. Will have to record a movie of the LCR
-   meter and the windows software side by side to see if I'm right or wrong.
- - Interprets the primary measurement value for some capacitance and inductance
-   ranges.
- - Won't work for most inductance and capacitance measurements until more
-   usb snoops with more components have been collected and analyzed
+ - Decodes both the primary measurement value and secondary measurement
+   value for all ranges
+ - Correctly displays high MOhm readings the same way as the LCR meter
+   does (UNI-T:s windows software v1.00 shows incorrect values)
+ - Correctly handles data sent during swithes of measurement mode
+   (UNI-T:s windows software v1.00 typically logs one erroneous value each
+   time that happens).
+ - Correctly displays theta when meter in auto mode (matches meter reading,
+   which is different from presentation and logging in UNI-T:s windows
+   software v1.00)
+ - Can run against offline data sets collected using usb sniffing on a
+   windows computer (i.e. to get bit-identical input to that used by
+   UNI-T:s windows software)
+
+
+## Next improvement area
+
+One remaining problem is getting everything to work magically for everybody
+(or at least users of ubuntu 14.04).
+
+The USB UART chip used in the multimeter complicates it. It's
+supposed to act as a HID device, but depending on how the computer detects it,
+it can decide to incorrectly set it up as a serial port (with drivers newer
+intended to work with that chip).
+
+For me, everything works perfectly while I'm connecting using my USB3 hub.
+But when connecting the LCR meter to one of the front ports on my computer,
+I won't get access to the LCR meter in the way I need.
+
+
+## Installing:
+
+I assume that you are running ubuntu 14.04, already have gnu make and
+a compiler (or else it may be enough to run `sudo apt-get install build-essential`)
+
+```
+git clone https://github.com/optisimon/UT612-linux-software.git
+cd UT612-linux-software/src
+sudo make prepare && make && sudo make install
+```
+
+You may have to unplug and replug the LCR meter if it already was
+connected during the installation. Note that turning the meter off and
+then on again won't be enough.
+
+
+## Usage:
+
+Start the UNI-T UT612 LCR Meter, and turn on USB mode.
+An icon with a small computer screen with an S inside it should appear
+in the top left corner of the LCR meters display.
+
+Start the ut612 tool by running:
+```
+ut612
+```
+
+The tool will print one line of measurement data each time the LCR meter
+takes a new reading. All values on each line is tab-separated.
+
+Typical output:
+
+Typical output (when pasted into a table):
+
+NO | Time | MMode | MValue | MUnit | SMode | SValue | SUnit | Freq
+--- | ---- | ----- | ------ | ----- | ----- | ------ | ----- | ----
+0 | 2016-01-16 20:48:12.414 | Cs | 94.68 | uF | ESR | 1.868 | Ohm | 1KHz
+1 | 2016-01-16 20:48:12.916 | Cs | 94.68 | uF | ESR | 1.868 | Ohm | 1KHz
+2 | 2016-01-16 20:48:13.439 | Cs | 94.68 | uF | ESR | 1.868 | Ohm | 1KHz
+3 | 2016-01-16 20:48:13.921 | Cs | 94.68 | uF | ESR | 1.868 | Ohm | 1KHz
+...
+
+
+## Uninstalling
+
+If you for some reason don't want to have the software installed any longer,
+just go into the source folder and uninstall it:
+
+```
+cd UT612-linux-software/src
+sudo make uninstall
+```
 
 
 ## Disclaimer
