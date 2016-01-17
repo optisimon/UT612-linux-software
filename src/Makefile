@@ -23,11 +23,11 @@ test : all
 	cd unittests && ./shell_tests.sh
 
 install: $(EXEC)
-	install $(EXEC) "$(DESTDIR)"/usr/bin
+	install $(EXEC) "$(DESTDIR)"/usr/local/bin
 	install -m 644 70-ut612.rules "$(DESTDIR)"/etc/udev/rules.d/
 
 uninstall:
-	rm "$(DESTDIR)"/usr/bin/$(EXEC)
+	rm "$(DESTDIR)"/usr/local/bin/$(EXEC)
 	rm "$(DESTDIR)"/etc/udev/rules.d/70-ut612.rules
 
 prepare:
