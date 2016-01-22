@@ -16,7 +16,7 @@
 #include <stdio.h>
 
 
-UT612ByteStreamParser::UT612ByteStreamParser(bool doTimestamp)
+UT612ByteStreamParser::UT612ByteStreamParser(bool doPrintHeader, bool doTimestamp)
 : _doTimestamp(doTimestamp),
   _frameInProgress(false),
   _lastByteWasCarriageReturn(false),
@@ -24,15 +24,25 @@ UT612ByteStreamParser::UT612ByteStreamParser(bool doTimestamp)
   _lastFrameByteCount(0),
   _frameCount(0)
 {
-	// Print a column header for all the measurements
-	std::cout << "NO\t";
+	if (doPrintHeader)
+	{
+		std::cout << getColumnHeader() << "\n";
+	}
+}
+
+std::string UT612ByteStreamParser::getColumnHeader() const
+{
+	std::ostringstream oss;
+	oss << "NO\t";
 
 	if (_doTimestamp)
 	{
-		std::cout << "Time\t";
+		oss << "Time\t";
 	}
 
-	std::cout << "MMode\tMValue\tMUnit\tSMode\tSValue\tSUnit\tFreq\n";
+	oss << "MMode\tMValue\tMUnit\tSMode\tSValue\tSUnit\tFreq";
+
+	return oss.str();
 }
 
 
@@ -398,7 +408,7 @@ void UT612ByteStreamParser::processByte(uint8_t byte)
 }
 
 
-std::string UT612ByteStreamParser::getCurrentTime()
+std::string UT612ByteStreamParser::getCurrentTime() const
 {
 	const bool appendMilliseconds = true;
 

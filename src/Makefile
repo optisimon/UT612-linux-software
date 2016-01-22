@@ -4,19 +4,24 @@ INCLUDE=
 LIBS_UDEV= `pkg-config libudev --libs` -lrt
 LIBS= -lusb-1.0 $(LIBS_UDEV)
 
-OBJS= main.o UT612ByteStreamParser.o UT612ByteSource.o hidapi/hid.o
+ut612_OBJS= main.o UT612ByteStreamParser.o UT612ByteSource.o hidapi/hid.o
+ut612_LIBS= $(LIBS)
+unittest_OBJS= unittests/test.o UT612ByteStreamParser.o UT612ByteSource.o hidapi/hid.o 
+unittest_LIBS= $(LIBS) -lboost_unit_test_framework
 
-EXEC= ut612
+EXECS= ut612 unittest
 
-COMPILER_FLAGS+= -Wall -O3
+COMPILER_FLAGS+= -Wall -O3 -std=c++0x
 
-$(EXEC): $(OBJS) $(wildcard *.h) $(wildcard *.hpp)
-	$(CXX) $(COMPILER_FLAGS) -o $(EXEC) $(OBJS) $(LIBS)
+all:	$(EXECS)
+
+$(EXECS): $(ut612_OBJS) $(unittest_OBJS) $(wildcard *.h) $(wildcard *.hpp)
+	$(CXX) $(COMPILER_FLAGS) -o $@ $($@_OBJS) $($@_LIBS)
 
 %.o:	%.cpp
 	$(CXX) -c $(COMPILER_FLAGS) -o $@ $< $(INCLUDE)
 
-all:	$(EXEC)
+
 
 .PHONY: test
 test : all
@@ -34,4 +39,4 @@ prepare:
 	apt-get install libudev-dev
 
 clean:
-	rm -f $(EXEC) $(OBJS)
+	rm -f $(EXECS) $(ut612_OBJS) $(unittest_OBJS)
