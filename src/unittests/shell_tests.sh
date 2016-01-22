@@ -31,7 +31,7 @@ do
 	}
 
 	rm "$TMPFILE"
-	../ut612 "$input" > "$TMPFILE"
+	../ut612 "$input" &> "$TMPFILE"
 
 	if [ -e "$expected" ] ;
 	then

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 #include <sys/time.h>
 #include <stdio.h>
@@ -87,165 +88,129 @@ enum SModeEnum {
 	SMODE_THETA = 4,
 };
 
-void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t next_start)
+
+std::string UT612ByteStreamParser::mMode2String(uint8_t mMode, uint8_t flags) const
 {
-	const uint8_t* d = &data[next_start];
+	std::ostringstream retval;
 
-	if (d[0] != 0)
-	{
-		std::cout << "\nWARNING: expected 0x0d 0x0a to be followed by 0x00\n";
-		std::cout << "\nERROR: a zero in first byte\n";
-	}
-
-	switch (d[5])
+	switch (mMode)
 	{
 	case MMODE_L:
-		std::cout << "L";
+		retval << "L";
 		break;
 	case MMODE_C:
-		std::cout << "C";
+		retval << "C";
 		break;
 	case MMODE_R:
-		std::cout << "R";
+		retval << "R";
 		break;
 	case MMODE_DCR:
-		std::cout << "DCR";
+		retval << "DCR";
 		break;
 	default:
-		std::cout << "\nERROR: Unexpected byte in MMode: " << int(d[5]) << "\n";
+	{
+		std::ostringstream oss;
+		oss << "ERROR: Unexpected byte in MMode: " << int(mMode);
+		throw std::runtime_error(oss.str());
+	}
 	}
 
-	if (d[5] == MMODE_DCR)
-	{
-		std::cout << "\t";
-	}
-	else
+	if (mMode != MMODE_DCR)
 	{
 		// Add parallel modifier
-		if (d[2] & MMODE_MODIFIER_PARALLEL)
+		if (flags & MMODE_MODIFIER_PARALLEL)
 		{
-			std::cout << "p\t";
+			retval << "p";
 		}
-		else if (d[2] & MMODE_MODIFIER_SERIAL || (d[2] == 0)) // TODO: Figure out real rule. Maybe only top bit matters
+		else if ((flags & MMODE_MODIFIER_SERIAL) || (flags == 0)) // TODO: Figure out real rule. Maybe only top bit matters
 		{
-			std::cout << "s\t";
+			retval << "s";
 		}
 		else
 		{
-			std::cout << "\nERROR: unknown serial/parallel modifier: " << int(d[2]) << "\n";
+			std::ostringstream oss;
+			oss << "ERROR: unknown serial/parallel modifier: " << int(flags);
+			throw std::runtime_error(oss.str());
 		}
 	}
 
-	// Handle error modifiers
-	if (d[9] == 0 || d[9] == 128) // TODO: 128 first seen when measuring Cs, approx 790uF. No clue what it means
+	return retval.str();
+}
+
+
+std::string UT612ByteStreamParser::mUnit2String(uint8_t mUnit) const
+{
+	int unit = mUnit >> 3;
+
+	switch(unit)
 	{
-		// NO ERROR - use the three preceeding bytes for measurement value
+	case 0x00:
+		return "";
+		break;
 
-		int val = d[7] + d[6] * 256;
+	case 1:
+		return "Ohm";
+		break;
+	case 2:
+		return "kOhm";
+		break;
+	case 3:
+		return "MOhm";
+		break;
 
 
-		size_t numDecimals = d[8] & 0x07;
+	case 5:
+		return "uH";
+		break;
+	case 6:
+		return "mH";
+		break;
+	case 7:
+		return "H";
+		break;
 
+
+	case 9:
+		return "pF";
+		break;
+	case 10:
+		return "nF";
+		break;
+	case 11:
+		return "uF";
+		break;
+	case 12:
+		return "mF";
+		break;
+	default:
+	{
 		std::ostringstream oss;
-		oss << val;
-		std::string s = "00000" + oss.str();
-
-		if (numDecimals-1 < s.length() && numDecimals > 0)
-		{
-			s.insert(s.length() - numDecimals, ".");
-
-			while (s.length()> 1 && s[0] == '0' && s[1] != '.')
-			{
-				s = s.substr(1);
-			}
-
-			std::cout << s << " ";
-		}
-		else
-		{
-			std::cout << "\nERROR: don't know what to do with numDecimals=" << numDecimals << ", val=" << val << "\n";
-		}
-
-		int unit = d[8] >> 3;
-
-		switch(unit)
-		{
-		case 1:
-			std::cout << "Ohm";
-			break;
-		case 2:
-			std::cout << "kOhm";
-			break;
-		case 3:
-			std::cout << "MOhm";
-			break;
-
-
-		case 5:
-			std::cout << "uH";
-			break;
-		case 6:
-			std::cout << "mH";
-			break;
-		case 7:
-			std::cout << "H";
-			break;
-
-
-		case 9:
-			std::cout << "pF";
-			break;
-		case 10:
-			std::cout << "nF";
-			break;
-		case 11:
-			std::cout << "uF";
-			break;
-		case 12:
-			std::cout << "mF";
-			break;
-		default:
-			std::cout << "\nERROR: unknown unit " << unit << " (" << int(d[8]) << ")\n";
-			break;
-		}
-		std::cout << "\t";
-
-
+		oss << "ERROR: unknown unit " << int(unit) << " (" << int(mUnit) << ")";
+		throw std::runtime_error(oss.str());
+		break;
 	}
-	else if (d[9] == 34)
-	{
-		std::cout << "-\t";
 	}
-	else if (d[9] == 195)
-	{
-		std::cout << "OL\t";
-	}
-	else if (d[9] == 67)
-	{
-		std::cout << "OL\t"; // TODO: this also sets secondary reading to "----". Seen for Lp, OL. H, secondary reading Q
-	}
-	else
-	{
-		std::cout << "\nERROR: don't know what to do with error modifier d[9]: " << int(d[9]) << "\n";
-	}
+}
 
 
-	switch (d[10])
+std::string UT612ByteStreamParser::sMode2String(uint8_t sMode) const
+{
+	switch (sMode)
 	{
 	case SMODE_EMPTY:
-		std::cout << " \t";
+		return "";
 		break;
 	case SMODE_D:
-		std::cout << "D\t";
+		return "D";
 		break;
 	case SMODE_Q:
-		std::cout << "Q\t";
+		return "Q";
 		break;
 	case SMODE_ESR:
-		std::cout << "ESR\t";
+		return "ESR";
 		break;
 	case SMODE_THETA:
-		std::cout << "theta\t";
+		return "theta";
 //		if (d[5] == MMODE_C || d[5] == MMODE_L)
 //		{
 //			std::cout << "theta\t";
@@ -257,113 +222,265 @@ void UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t
 //		}
 		break;
 	default:
-		std::cout << "\nERROR: Unexpected byte in SMode: " << int(d[10]) << "\n";
-	}
-
-
-	if (d[14] == 0 || d[14] == 128) // TODO: JUST GUESSING
 	{
-		int sval = int16_t(d[12] + d[11]*256);
-		//std::cout << "sval=" << sval << "\t";
-
-		size_t numDecimals = d[13] & 0x07;
-
-
-		// TODO: if numdecimals is set to 4, then the windows software only shows the first 3 digits after the decimal
-		// TODO: and if val=65535, and numdecimals set to 1, then the windows software only shows 6553, not 6553.5
 		std::ostringstream oss;
-		oss << sval;
-		std::string s = "00000" + oss.str();
+		oss << "ERROR: Unexpected byte in SMode: " << int(sMode);
+		throw std::runtime_error(oss.str());
+	}
+	}
+}
 
-		if (numDecimals-1 < s.length() && numDecimals > 0)
-		{
-			s.insert(s.length() - numDecimals, ".");
 
-			while (s.length()> 1 && s[0] == '0' && s[1] != '.')
-			{
-				s = s.substr(1);
-			}
-
-			std::cout << s << " ";
-		}
-		else
-		{
-			std::cout << "\nERROR: don't know what to do with numDecimals=" << numDecimals << ", sval=" << sval << "\n";
-		}
-	}
-	else if (d[14] == 162)
-	{
-		std::cout << "-\t";
-	}
-	else if (d[14] == 129)
-	{
-		std::cout << "\t";
-	}
-	else if (d[14] == 195)
-	{
-		std::cout << "OL\t";
-	}
-	else
-	{
-		std::cout << "\nERROR: don't know what to do with d[14]=" << int(d[14]) << "\n";
-	}
-
-	int sunit = d[13] >> 3;
+std::string UT612ByteStreamParser::sUnit2String(uint8_t sUnit) const
+{
+	int sunit = sUnit >> 3;
 
 	switch(sunit)
 	{
 	case 0x00:
-		std::cout << "\t";
+		return "";
 		break;
 
 	case 0x01:
-		std::cout << "Ohm\t";
+		return "Ohm";
 		break;
 
 	case 0x02:
-		std::cout << "kOhm\t";
+		return "kOhm";
 		break;
 
 	case 0x03:
-		std::cout << "MOhm\t";
+		return "MOhm";
 		break;
 
 	case 0x0e:
-		std::cout << "Deg\t";
+		return "Deg";
 		break;
 
 	default:
-		std::cout << "\nERROR: don't know what to do with sunit=" << sunit << "\n";
+	{
+		std::ostringstream oss;
+		oss << "ERROR: don't know what to do with sunit=" << sunit << "\n";
+		throw std::runtime_error(oss.str());
 		break;
 	}
+	}
+}
 
 
-	switch (d[3])
+std::string UT612ByteStreamParser::freq2String(uint8_t freq) const
+{
+	switch (freq)
 	{
 	case FREQ_100HZ:
-		std::cout << "100Hz";
+		return "100Hz";
 		break;
 	case FREQ_120HZ:
-		std::cout << "120Hz";
+		return "120Hz";
 		break;
 	case FREQ_1KHZ:
-		std::cout << "1KHz";
+		return "1KHz";
 		break;
 	case FREQ_10KHZ:
-		std::cout << "10KHz";
+		return "10KHz";
 		break;
 	case FREQ_100KHZ:
-		std::cout << "100KHz";
+		return "100KHz";
 		break;
 	case FREQ_DCR_MEASUREMENT:
-		std::cout << "0Hz";
+		return "0Hz";
 		break;
 	default:
-		std::cout << "\nERROR: Unexpected byte in test frequency: " << int(d[3]) << "\n";
+		std::ostringstream oss;
+		oss << "ERROR: Unexpected byte in test frequency: " << int(freq);
+		throw std::runtime_error(oss.str());
 		break;
 	}
+}
 
-	std::cout << "\n";
+
+std::string UT612ByteStreamParser::bits2Number(uint8_t msb, uint8_t lsb, uint8_t decimals, uint8_t maxNumSegments) const
+{
+	bool isNegative = false;
+	int val = int16_t(lsb + msb * 256);
+
+	if (val < 0)
+	{
+		isNegative = true;
+		val = -val;
+	}
+	size_t numDecimals = decimals & 0x07;
+
+	std::ostringstream oss;
+	oss << val;
+	std::string s = "00000" + oss.str();
+
+	if (numDecimals-1 < s.length() && numDecimals > 0)
+	{
+		// Put the comma in the correct place
+		s.insert(s.length() - numDecimals, ".");
+
+		// Strip our convenient leading zeros
+		while (s.length() > 1 && s[0] == '0' && s[1] != '.')
+		{
+			s = s.substr(1);
+		}
+
+
+		//
+		// If too many digits, and a decimal point present, strip rightmost digits
+		// NOTE: If we got here, we definitely did add a decimal point to the number.
+		// NOTE: Looked like the windows software truncates the values, instead
+		//       of correctly rounding them, so I truncates the values as well...
+		//
+
+		// -1 since we added a dot in the number, which won't occupy the segments needed for a digit.
+		int numActualDigits = s.length() - 1;
+
+		while (maxNumSegments < numActualDigits)
+		{
+			if (s[s.length() - 1] != '.')
+			{
+				s = s.substr(0, s.length() - 1);
+				numActualDigits--;
+			}
+			else
+			{
+				throw std::runtime_error("ERROR: don't know what to do inside bits2Number");
+			}
+		}
+
+
+		// restore negativity
+		if (isNegative)
+		{
+			s = "-" + s;
+		}
+
+		return s;
+	}
+	else
+	{
+		std::ostringstream oss;
+		oss << "ERROR: don't know what to do with numDecimals=" << numDecimals << ", val=" << val << ", isNegative" << isNegative;
+		throw std::runtime_error(oss.str());
+	}
+}
+
+
+std::string UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t next_start)
+{
+	std::ostringstream retval;
+
+	const uint8_t* d = &data[next_start];
+
+	if (d[0] != 0)
+	{
+		throw std::runtime_error("ERROR: not a zero in first byte (expected 0x0d 0x0a to be followed by 0x00)");
+	}
+
+	std::string mmode = mMode2String(d[5], d[2]);
+
+	retval << mmode << "\t";
+
+	// Handle error modifiers
+	if (d[9] == 0 || d[9] == 128) // TODO: 128 first seen when measuring Cs, approx 790uF. No clue what it means
+	{
+		// NO ERROR - use the three preceeding bytes for measurement value
+
+		std::string number = bits2Number(d[6], d[7], d[8], 5);
+
+		retval << number << "\t";
+	}
+	else if (d[9] == 34)
+	{
+		retval << "-\t";
+	}
+	else if (d[9] == 195)
+	{
+		retval << "OL\t";
+	}
+	else if (d[9] == 67)
+	{
+		retval << "OL\t"; // TODO: this also sets secondary reading to "----". Seen for Lp, OL. H, secondary reading Q
+	}
+	else
+	{
+		std::ostringstream oss;
+		oss << "ERROR: don't know what to do with error modifier d[9]: " << int(d[9]);
+		throw std::runtime_error(oss.str());
+	}
+
+
+	// Measurement unit
+	std::string mUnit = mUnit2String(d[8]);
+
+	retval << mUnit << "\t";
+
+
+
+	// Secondary display mode
+	std::string sMode = sMode2String(d[10]);
+
+	retval << sMode << "\t";
+
+
+	if (d[14] == 0 || d[14] == 128) // TODO: JUST GUESSING
+	{
+
+		std::string number = bits2Number(d[11], d[12], d[13], 4);
+
+		retval << number << "\t";
+	}
+	else if (d[14] == 162)
+	{
+		retval << "-\t";
+	}
+	else if (d[14] == 129)
+	{
+		retval << "\t";
+	}
+	else if (d[14] == 195)
+	{
+		retval << "OL\t";
+	}
+	else
+	{
+		std::ostringstream oss;
+		oss << "ERROR: don't know what to do with d[14]=" << int(d[14]);
+		throw std::runtime_error(oss.str());
+	}
+
+
+	// Secondary display unit
+	std::string sUnit = sUnit2String(d[13]);
+	retval << sUnit << "\t";
+
+
+	// Measurement frequency
+	std::string freq = freq2String(d[3]);
+	retval << freq;
+
+	return retval.str();
+}
+
+
+static std::string convert2HexString(const uint8_t* data, size_t length)
+{
+	std::ostringstream oss;
+
+	oss << "{";
+	for (size_t i = 0; i < length; i++)
+	{
+		if (i != 0) {
+			oss << ", ";
+		}
+		char buff[32];
+		snprintf(buff, sizeof(buff), "0x%02x", (unsigned int)(data[i]));
+		oss << buff;
+	}
+	oss << "}";
+	return oss.str();
 }
 
 
@@ -384,7 +501,7 @@ void UT612ByteStreamParser::processByte(uint8_t byte)
 		int bytesSinceLastFrame = _byteCount - _lastFrameByteCount;
 		if (bytesSinceLastFrame != frame_size)
 		{
-			std::cout << "\nERROR - FRAME ALIGNMENT ERROR (diff=" << bytesSinceLastFrame << ")\n";
+			std::cerr << "\nERROR - FRAME ALIGNMENT ERROR (diff=" << bytesSinceLastFrame << ")" << std::endl;
 		}
 		_lastFrameByteCount = _byteCount;
 
@@ -399,7 +516,26 @@ void UT612ByteStreamParser::processByte(uint8_t byte)
 			std::cout << getCurrentTime() << "\t";
 		}
 
-		processFrame(_buffer, _buffer.size() - frame_size);
+		try {
+			std::string values = processFrame(_buffer, _buffer.size() - frame_size);
+			std::cout << values;
+		}
+		catch (std::runtime_error & e)
+		{
+			std::cerr << "Exception: \""<< e.what() << "\"\n";
+
+			const uint8_t* d = &_buffer[_buffer.size() - frame_size];
+			std::cerr << "Offending bytes: " << convert2HexString(d, frame_size) << std::endl;
+		}
+
+		bool showHex = false;
+		if (showHex)
+		{
+			const uint8_t* d = &_buffer[_buffer.size() - frame_size];
+			std::cout << "\t" << convert2HexString(d, frame_size);
+		}
+
+		std::cout << "\n";
 
 		_buffer.clear();
 	}
@@ -421,7 +557,7 @@ std::string UT612ByteStreamParser::getCurrentTime() const
 
 	if (result == 0)
 	{
-		return ""; // TODO: should we assert? or print to stderr? or throw exception?
+		throw std::runtime_error("call to localtime_r failed");
 	}
 
 	char buffer [64];
