@@ -4,9 +4,9 @@ INCLUDE=
 LIBS_UDEV= `pkg-config libudev --libs` -lrt
 LIBS= -lusb-1.0 $(LIBS_UDEV)
 
-ut612_OBJS= main.o UT612ByteStreamParser.o UT612ByteSource.o hidapi/hid.o
+ut612_OBJS= main.o UT612ByteStreamParser.o UT612ByteSource.o ByteStreamToFile.o hidapi/hid.o
 ut612_LIBS= $(LIBS)
-unittest_OBJS= unittests/test.o UT612ByteStreamParser.o UT612ByteSource.o hidapi/hid.o 
+unittest_OBJS= unittests/test.o UT612ByteStreamParser.o UT612ByteSource.o ByteStreamToFile.o hidapi/hid.o 
 unittest_LIBS= $(LIBS) -lboost_unit_test_framework
 
 EXECS= ut612 unittest
