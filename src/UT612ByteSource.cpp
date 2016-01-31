@@ -10,6 +10,8 @@
 #include "hidapi/hidapi.h"
 #include "UT612ByteSource.hpp"
 
+#include <iostream>
+
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -52,11 +54,31 @@ int UT612ByteSource::run()
 	hid_device* handle = hid_open(0x10c4, 0xea80, NULL);
 	if (!handle)
 	{
-		printf("unable to connect to the UT612 LCR Meter\n");
+		std::cerr
+		<< "ERROR: unable to connect to the UT612 LCR Meter\n"
+		<< "The most common problem is that the cp210x kernel module is interfering\n\n"
+		<< "Follow the instructions in the file src/blacklist-cp210x.conf to prevent\n"
+		<< "that module from stealing this usb device which it doesn't support\n\n"
+		<< "A quick test to se if it will help is running\n"
+		<< " sudo rmmod cp210x\n"
+		<< "and then replugging the LCR meter\n";
 
 		if (_verbose)
 		{
 			printAllHidDevices();
+
+			std::cout
+			<< "# To be able to troubleshoot any problems, you need to provide the output of the following commands:\n"
+			<< "lsusb -d 0x10c4:0xea80 || echo \"THE DEVICE IS NOT EVEN ON THE USB BUS!\"\n"
+			<< "tree /sys/bus/usb\n"
+			<< "\n"
+			<< "# In addition, unplug your LCR meter, and then replug it, followed by typing the command\n"
+			<< "dmesg\n"
+			<< "# NOTE: you don't have to include all output from the dmesg command, only the last 20-30 lines is typically needed."
+			<< "#"
+			<< "# In addition, unplug your LCR meter, run the command below, and replug it before aborting the command below by pressing Ctrl-C\n"
+			<< "udevadm monitor -p\n"
+			<< "\n";
 		}
 
 		return 1;

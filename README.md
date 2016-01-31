@@ -35,7 +35,16 @@ cd UT612-linux-software/src
 sudo make prepare && make && sudo make install
 ```
 
-You may have to unplug and replug the LCR meter if it already was
+### IMPORTANT: Disabling cp210x
+
+In ubuntu 14.04, the cp210x driver is incorrectly trying to grab the LCR
+meter, and fails to open it (since that driver don't support the USB chip).
+To disable that driver from interfering, you have to follow the instructions
+in the file `src/blacklist-cp210x.conf` to disable that driver from trying to
+load that specific chip. To test if that would help, you could try to remove
+the cp210x module altogether by running `rmmod cp210x`.
+
+You will have to unplug and replug the LCR meter if it already was
 connected during the installation. Note that turning the meter off and
 then on again won't be enough.
 
