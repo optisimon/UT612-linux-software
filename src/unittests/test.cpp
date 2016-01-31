@@ -55,7 +55,7 @@ BOOST_FIXTURE_TEST_CASE(pattern2, Fixture) {
 }
 BOOST_FIXTURE_TEST_CASE(pattern3, Fixture) {
 	std::vector<uint8_t> data = {0x00, 0x0d, 0x40, 0x58, 0x00, 0x01, 0x00, 0x64, 0x29, 0x00, 0x02, 0x00, 0x01, 0x04, 0x80, 0x0d, 0x0a};
-	std::string expected("Ls\t10.0\tuH\tQ\t0.0001\t\t1KHz");
+	std::string expected("Ls\t10.0\tuH\tQ\t0.000\t\t1KHz");
 	std::string output = p.testableProcessFrame(data, 0);
 	CHECK_STRINGS(expected, output);
 }
@@ -161,13 +161,13 @@ BOOST_FIXTURE_TEST_CASE(pattern19, Fixture) {
 }
 BOOST_FIXTURE_TEST_CASE(pattern20, Fixture) {
 	std::vector<uint8_t> data = {0x00, 0x0d, 0x40, 0x58, 0x00, 0x01, 0x00, 0x3b, 0x29, 0x00, 0x02, 0x00, 0x00, 0x04, 0x80, 0x0d, 0x0a};
-	std::string expected("Ls\t5.9\tuH\tQ\t0.0000\t\t1KHz");
+	std::string expected("Ls\t5.9\tuH\tQ\t0.000\t\t1KHz");
 	std::string output = p.testableProcessFrame(data, 0);
 	CHECK_STRINGS(expected, output);
 }
 BOOST_FIXTURE_TEST_CASE(pattern21, Fixture) {
 	std::vector<uint8_t> data = {0x00, 0x0d, 0x80, 0x58, 0x00, 0x01, 0x21, 0xdf, 0x39, 0x00, 0x02, 0x00, 0x00, 0x04, 0x80, 0x0d, 0x0a};
-	std::string expected("Lp\t867.1\tH\tQ\t0.0000\t\t1KHz");
+	std::string expected("Lp\t867.1\tH\tQ\t0.000\t\t1KHz");
 	std::string output = p.testableProcessFrame(data, 0);
 	CHECK_STRINGS(expected, output);
 }
@@ -221,13 +221,13 @@ BOOST_FIXTURE_TEST_CASE(pattern29, Fixture) {
 }
 BOOST_FIXTURE_TEST_CASE(pattern30, Fixture) {
 	std::vector<uint8_t> data = {0x00, 0x0d, 0x40, 0x58, 0x00, 0x01, 0x01, 0x33, 0x29, 0x00, 0x02, 0x00, 0x03, 0x04, 0x80, 0x0d, 0x0a};
-	std::string expected("Ls\t30.7\tuH\tQ\t0.0003\t\t1KHz");
+	std::string expected("Ls\t30.7\tuH\tQ\t0.000\t\t1KHz");
 	std::string output = p.testableProcessFrame(data, 0);
 	CHECK_STRINGS(expected, output);
 }
 BOOST_FIXTURE_TEST_CASE(pattern31, Fixture) {
 	std::vector<uint8_t> data = {0x00, 0x0d, 0x80, 0x58, 0x00, 0x01, 0x09, 0x55, 0x39, 0x00, 0x02, 0x00, 0x03, 0x04, 0x80, 0x0d, 0x0a};
-	std::string expected("Lp\t238.9\tH\tQ\t0.0003\t\t1KHz");
+	std::string expected("Lp\t238.9\tH\tQ\t0.000\t\t1KHz");
 	std::string output = p.testableProcessFrame(data, 0);
 	CHECK_STRINGS(expected, output);
 }
