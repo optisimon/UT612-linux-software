@@ -368,97 +368,130 @@ std::string UT612ByteStreamParser::bits2Number(uint8_t msb, uint8_t lsb, uint8_t
 }
 
 
+struct UT612Struct {
+	uint8_t d0_reserved_0;                     // 0 NOTE: NO CLUE IF THIS SHOULD BE 0
+	uint8_t d1_reserved_13;                    // 1 NOTE: NO CLUE IF THIS SHOULD BE 13
+	uint8_t flags_parallel;                    // 2
+	uint8_t frequency;                         // 3
+	uint8_t d4_reserved_0;                     // 4 NOTE: NO CLUE IF THIS SHOULD BE 0
+	uint8_t mmode;                             // 5
+	uint8_t mvalue_msb;                        // 6
+	uint8_t mvalue_lsb;                        // 7
+	uint8_t mvalue_decimals_and_unit;          // 8
+	uint8_t mvalue_error_flags;                // 9
+	uint8_t secondary_mode;                    // 10
+	uint8_t secondary_value_msb;               // 11
+	uint8_t secondary_value_lsb;               // 12
+	uint8_t secondary_value_decimals_and_unit; // 13
+	uint8_t secondary_value_error_flags;       // 14
+	uint8_t d15_reserved_13;                   // 15 NOTE: NO CLUE IF THIS SHOULD BE 13
+	uint8_t d16_reserved_10;                   // 16 NOTE: NO CLUE IF THIS SHOULD BE 10
+} __attribute__((__packed__));
+
+
 std::string UT612ByteStreamParser::processFrame(const std::vector<uint8_t>&data, size_t next_start)
 {
 	std::ostringstream retval;
 
 	const uint8_t* d = &data[next_start];
 
-	if (d[0] != 0)
+	const UT612Struct* in = reinterpret_cast<const UT612Struct*>(d);
+
+	if (in->d0_reserved_0 != 0)
 	{
 		throw std::runtime_error("ERROR: not a zero in first byte (expected 0x0d 0x0a to be followed by 0x00)");
 	}
 
-	std::string mmode = mMode2String(d[5], d[2]);
+	std::string mmode = mMode2String(in->mmode, in->flags_parallel);
 
 	retval << mmode << "\t";
 
 	// Handle error modifiers
-	if (d[9] == 0 || d[9] == 128) // TODO: 128 first seen when measuring Cs, approx 790uF. No clue what it means
+	if (in->mvalue_error_flags == 0 || in->mvalue_error_flags == 128) // TODO: 128 first seen when measuring Cs, approx 790uF. No clue what it means
 	{
 		// NO ERROR - use the three preceeding bytes for measurement value
 
-		std::string number = bits2Number(d[6], d[7], d[8], 5);
+		std::string number = bits2Number(
+				in->mvalue_msb,
+				in->mvalue_lsb,
+				in->mvalue_decimals_and_unit,
+				5
+		);
 
 		retval << number << "\t";
 	}
-	else if (d[9] == 34)
+	else if (in->mvalue_error_flags == 34)
 	{
 		retval << "-\t";
 	}
-	else if (d[9] == 195)
+	else if (in->mvalue_error_flags == 195)
 	{
 		retval << "OL\t";
 	}
-	else if (d[9] == 67)
+	else if (in->mvalue_error_flags == 67)
 	{
 		retval << "OL\t"; // TODO: this also sets secondary reading to "----". Seen for Lp, OL. H, secondary reading Q
 	}
 	else
 	{
 		std::ostringstream oss;
-		oss << "ERROR: don't know what to do with error modifier d[9]: " << int(d[9]);
+		oss << "ERROR: don't know what to do with error modifier d[9]: " << int(in->mvalue_error_flags);
 		throw std::runtime_error(oss.str());
 	}
 
 
 	// Measurement unit
-	std::string mUnit = mUnit2String(d[8]);
+	std::string mUnit = mUnit2String(in->mvalue_decimals_and_unit);
 
 	retval << mUnit << "\t";
 
 
 
 	// Secondary display mode
-	std::string sMode = sMode2String(d[10]);
+	std::string sMode = sMode2String(in->secondary_mode);
 
 	retval << sMode << "\t";
 
 
-	if (d[14] == 0 || d[14] == 128) // TODO: JUST GUESSING
+	if (in->secondary_value_error_flags == 0 || in->secondary_value_error_flags == 128) // NOTE: JUST GUESSING
 	{
 
-		std::string number = bits2Number(d[11], d[12], d[13], 4);
+		std::string number = bits2Number(
+				in->secondary_value_msb,
+				in->secondary_value_lsb,
+				in->secondary_value_decimals_and_unit,
+				4
+		);
 
 		retval << number << "\t";
 	}
-	else if (d[14] == 162)
+	else if (in->secondary_value_error_flags == 162)
 	{
 		retval << "-\t";
 	}
-	else if (d[14] == 129)
+	else if (in->secondary_value_error_flags == 129)
 	{
 		retval << "\t";
 	}
-	else if (d[14] == 195)
+	else if (in->secondary_value_error_flags == 195)
 	{
 		retval << "OL\t";
 	}
 	else
 	{
 		std::ostringstream oss;
-		oss << "ERROR: don't know what to do with d[14]=" << int(d[14]);
+		oss << "ERROR: don't know what to do with d[14]=" << int(in->secondary_value_error_flags);
 		throw std::runtime_error(oss.str());
 	}
 
 
 	// Secondary display unit
-	std::string sUnit = sUnit2String(d[13]);
+	std::string sUnit = sUnit2String(in->secondary_value_decimals_and_unit);
 	retval << sUnit << "\t";
 
 
 	// Measurement frequency
-	std::string freq = freq2String(d[3]);
+	std::string freq = freq2String(in->frequency);
 	retval << freq;
 
 	return retval.str();
