@@ -22,10 +22,10 @@ $(EXECS): $(ut612_OBJS) $(unittest_OBJS) $(wildcard *.h) $(wildcard *.hpp)
 	$(CXX) -c $(COMPILER_FLAGS) -o $@ $< $(INCLUDE)
 
 
-
 .PHONY: test
 test : all
 	cd unittests && ./shell_tests.sh
+	./unittest
 
 install: $(EXEC)
 	install $(EXEC) "$(DESTDIR)"/usr/local/bin
