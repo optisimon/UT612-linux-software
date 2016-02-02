@@ -35,18 +35,21 @@ cd UT612-linux-software/src
 sudo make prepare && make && sudo make install
 ```
 
-### IMPORTANT: Disabling cp210x
+### IMPORTANT: You will have to restart your computer once after installation
+
+If you don't want to do that, you'll have to read the rest of this section
 
 In ubuntu 14.04, the cp210x driver is incorrectly trying to grab the LCR
 meter, and fails to open it (since that driver don't support the USB chip).
-To disable that driver from interfering, you have to follow the instructions
-in the file `src/blacklist-cp210x.conf` to disable that driver from trying to
-load that specific chip. To test if that would help, you could try to remove
-the cp210x module altogether by running `rmmod cp210x`.
+To disable that driver from interfering, `sudo make install` will blacklist the
+VID:PID of the USB chip in the LCR meter. You might have to restart your
+computer once for that setting to take effect.
 
-You will have to unplug and replug the LCR meter if it already was
-connected during the installation. Note that turning the meter off and
-then on again won't be enough.
+An alternative to restarting would be to to stop the cp210x module by running
+`rmmod cp210x`. If not restarting the computer, you will addditionally have to
+unplug and replug the LCR meter once if it already was connected during the
+installation. Note that turning the meter off and then on again won't be enough
+(the USB chip is always powered when connected to USB).
 
 
 ## Usage:
@@ -75,6 +78,22 @@ NO | Time | MMode | MValue | MUnit | SMode | SValue | SUnit | Freq
 3 | 2016-01-16 20:48:13.921 | Cs | 94.68 | uF | ESR | 1.868 | Ohm | 1KHz
 ...
 
+
+For the comlete listing of command line options, run `ut612 --help`
+
+
+## Troubleshooting
+
+My intention is that the software should work on the latest LTS releases of
+Ubuntu (i.e. 14.04 and later 16.04), and preferably on most or all debian
+based distributions.
+
+There is a script in the source folder, `collect_debug_info.sh`, whos output
+is essential to do any type of troubleshooting. If you create an issue at
+https://github.com/optisimon/UT612-linux-software/issues, the minimum required
+output is your description of the problem, and the output of
+`collect_debug_info.sh [name_of_generated_report_file.log]`. If there are more
+lines in the dmesg part than seems needed, feel free to trim it down...
 
 ## Uninstalling
 
