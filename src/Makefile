@@ -10,12 +10,13 @@ unittest_OBJS= unittests/test.o UT612ByteStreamParser.o UT612ByteSource.o ByteSt
 unittest_LIBS= $(LIBS) -lboost_unit_test_framework
 
 EXECS= ut612 unittest
+EXEC_installed= ut612
 
 COMPILER_FLAGS+= -Wall -O3 -std=c++0x
 
 all:	$(EXECS)
 
-$(EXECS): $(ut612_OBJS) $(unittest_OBJS) $(wildcard *.h) $(wildcard *.hpp)
+$(EXECS): $(ut612_OBJS) $(unittest_OBJS) $(wildcard *.h) $(wildcard *.hpp) Makefile
 	$(CXX) $(COMPILER_FLAGS) -o $@ $($@_OBJS) $($@_LIBS)
 
 %.o:	%.cpp
@@ -27,16 +28,51 @@ test : all
 	cd unittests && ./shell_tests.sh
 	./unittest
 
-install: $(EXEC)
-	install $(EXEC) "$(DESTDIR)"/usr/local/bin
-	install -m 644 70-ut612.rules "$(DESTDIR)"/etc/udev/rules.d/
+
+#
+# Code for adding / removing blacklisting of a kernel module which incorrectly tries
+# to use this chip as a regular uart. That module always fails and is not supposed to do that.
+#
+CP210X_BLACKLIST_DESTFILE=$(DESTDIR)/etc/modprobe.d/blacklist-cp210x.conf
+CP210X_BLACKLIST_LINE1='\# Blacklisting UT612 LCR Meter (and all CP210x UART Bridges)'
+CP210X_BLACKLIST_LINE2='alias usb:v10C4pEA80d*dc*dsc*dp*ic*isc*ip*in* off'
+CP210X_BLACKLIST_LINE2_SED_FRIENDLY='alias usb:v10C4pEA80d\*dc\*dsc\*dp\*ic\*isc\*ip\*in\* off'
+
+define removeBlacklist
+	@if [ -e "$(CP210X_BLACKLIST_DESTFILE)" ] ; then \
+		mv "$(CP210X_BLACKLIST_DESTFILE)" "$(CP210X_BLACKLIST_DESTFILE).bak_ut612" ; \
+		cat "$(CP210X_BLACKLIST_DESTFILE).bak_ut612" | \
+		tr '\n' '\0' | \
+		sed -e 's/'$(CP210X_BLACKLIST_LINE1)'\x00'$(CP210X_BLACKLIST_LINE2_SED_FRIENDLY)'\x00//' \
+		| tr '\0' '\n' > "$(CP210X_BLACKLIST_DESTFILE)" && \
+		rm "$(CP210X_BLACKLIST_DESTFILE).bak_ut612" ; \
+	else \
+		true ; \
+	fi
+endef
+
+define addBlacklist
+	$(call removeBlacklist)
+	@echo $(CP210X_BLACKLIST_LINE1) >> "$(CP210X_BLACKLIST_DESTFILE)"
+	@echo $(CP210X_BLACKLIST_LINE2) >> "$(CP210X_BLACKLIST_DESTFILE)"
+endef
+
+
+.PHONY: install
+install: $(EXEC_installed)
+	install $(EXEC_installed) $(DESTDIR)/usr/local/bin
+	install -m 644 70-ut612.rules $(DESTDIR)/etc/udev/rules.d/
+	$(call addBlacklist)
+	@echo "added blacklisting of the UT612 LCR meter to $(CP210X_BLACKLIST_DESTFILE)"
 
 uninstall:
-	rm "$(DESTDIR)"/usr/local/bin/$(EXEC)
-	rm "$(DESTDIR)"/etc/udev/rules.d/70-ut612.rules
+	rm $(DESTDIR)/usr/local/bin/$(EXEC_installed)
+	rm $(DESTDIR)/etc/udev/rules.d/70-ut612.rules
+	$(call removeBlacklist)
+	@echo "removed blacklisting of the UT612 LCR meter from $(CP210X_BLACKLIST_DESTFILE)" ; \
 
 prepare:
-	apt-get install libudev-dev
+	apt-get install libudev-dev sed
 
 clean:
 	rm -f $(EXECS) $(ut612_OBJS) $(unittest_OBJS)
