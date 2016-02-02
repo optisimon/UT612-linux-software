@@ -568,7 +568,7 @@ void UT612ByteStreamParser::processByte(uint8_t byte)
 			std::cout << "\t" << convert2HexString(d, frame_size);
 		}
 
-		std::cout << "\n";
+		std::cout << std::endl;
 
 		_buffer.clear();
 	}

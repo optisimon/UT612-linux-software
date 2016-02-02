@@ -96,11 +96,11 @@ int UT612ByteSource::run()
 
 		if (read == -1)
 		{
-			printf("\nERROR: hid_read_timeout returned -1\n");
+			std::cerr << "\nERROR: hid_read_timeout returned -1" << std::endl;
 		}
 		else if (read == 0 && _verbose)
 		{
-			printf("\nERROR: timed out calling hid_read_timeout\n");
+			std::cerr << "\nERROR: timed out calling hid_read_timeout" << std::endl;
 		}
 
 		if (read > 1)
@@ -109,7 +109,7 @@ int UT612ByteSource::run()
 
 			if (numUartRxBytes != read-1)
 			{
-				printf("\nERROR: numUartRxBytes = %d, read=%d\n", numUartRxBytes, read);
+				std::cerr << "\nERROR: numUartRxBytes = " << numUartRxBytes << ", read=" << read << std::endl;
 			}
 
 			for (int i = 0; i < numUartRxBytes; i++)
@@ -121,7 +121,7 @@ int UT612ByteSource::run()
 
 	enableUartForUT612(handle, false);
 
-	printf("\nKilled by user\n");
+	std::cout << "\nKilled by user" << std::endl;
 
 
 	//
@@ -151,7 +151,7 @@ void UT612ByteSource::printAllHidDevices()
 	}
 	hid_free_enumeration(devs);
 
-	printf("--------------------------------\n");
+	std::cout << "--------------------------------" << std::endl;
 }
 
 
@@ -164,23 +164,23 @@ void UT612ByteSource::printHidDeviceInfo(hid_device* handle)
 	wstr[0] = 0x0000;
 	int res = hid_get_manufacturer_string(handle, wstr, MAX_STR);
 	if (res < 0)
-		printf("Unable to read manufacturer string\n");
+		std::cerr << "Unable to read manufacturer string" << std::endl;
 	printf("Manufacturer String: %ls\n", wstr);
 
 	// Read the Product String
 	wstr[0] = 0x0000;
 	res = hid_get_product_string(handle, wstr, MAX_STR);
 	if (res < 0)
-		printf("Unable to read product string\n");
+		std::cerr << "Unable to read product string" << std::endl;
 	printf("Product String: %ls\n", wstr);
 
 	// Read the Serial Number String
 	wstr[0] = 0x0000;
 	res = hid_get_serial_number_string(handle, wstr, MAX_STR);
 	if (res < 0)
-		printf("Unable to read serial number string\n");
+		std::cerr << "Unable to read serial number string" << std::endl;
 	printf("Serial Number String: (%d) %ls", wstr[0], wstr);
-	printf("\n");
+	std::cout << std::endl;
 }
 
 
@@ -207,7 +207,7 @@ int UT612ByteSource::setupUartForUT612(hid_device* handle)
 	int result = hid_send_feature_report(handle, report, sizeof(report));
 	if (result == -1)
 	{
-		printf("\nERROR: setupUartForUT612: hid device transfer failed!\n");
+		std::cerr << "\nERROR: setupUartForUT612: hid device transfer failed!" << std::endl;
 	}
 
 	return result;
@@ -224,7 +224,7 @@ int UT612ByteSource::enableUartForUT612(hid_device* handle, bool enabled)
 	int result = hid_send_feature_report(handle, report, sizeof(report));
 	if (result == -1)
 	{
-		printf("\nERROR: enableUartForUT612: hid device transfer failed!\n");
+		std::cerr << "\nERROR: enableUartForUT612: hid device transfer failed!" << std::endl;
 	}
 
 	return result;
