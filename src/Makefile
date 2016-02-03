@@ -6,6 +6,7 @@ LIBS= -lusb-1.0 $(LIBS_UDEV)
 
 ut612_OBJS= main.o UT612ByteStreamParser.o UT612ByteSource.o ByteStreamToFile.o hidapi/hid.o
 ut612_LIBS= $(LIBS)
+
 unittest_OBJS= unittests/test.o UT612ByteStreamParser.o UT612ByteSource.o ByteStreamToFile.o hidapi/hid.o 
 unittest_LIBS= $(LIBS) -lboost_unit_test_framework
 
@@ -14,17 +15,19 @@ EXEC_installed= ut612
 
 COMPILER_FLAGS+= -Wall -O3 -std=c++0x
 
-all:	$(EXECS)
+ut612: $(ut612_OBJS) $(wildcard *.h) $(wildcard *.hpp) Makefile
+	$(CXX) $(COMPILER_FLAGS) -o $@ $($@_OBJS) $($@_LIBS)
 
-$(EXECS): $(ut612_OBJS) $(unittest_OBJS) $(wildcard *.h) $(wildcard *.hpp) Makefile
+unittest: $(unittest_OBJS) $(wildcard *.h) $(wildcard *.hpp) Makefile
 	$(CXX) $(COMPILER_FLAGS) -o $@ $($@_OBJS) $($@_LIBS)
 
 %.o:	%.cpp
 	$(CXX) -c $(COMPILER_FLAGS) -o $@ $< $(INCLUDE)
 
+all: ut612 unittest
 
 .PHONY: test
-test : all
+test : ut612 unittest
 	cd unittests && ./shell_tests.sh
 	./unittest
 
@@ -65,14 +68,21 @@ install: $(EXEC_installed)
 	$(call addBlacklist)
 	@echo "added blacklisting of the UT612 LCR meter to $(CP210X_BLACKLIST_DESTFILE)"
 
+.PHONY: uninstall
 uninstall:
 	rm $(DESTDIR)/usr/local/bin/$(EXEC_installed)
 	rm $(DESTDIR)/etc/udev/rules.d/70-ut612.rules
 	$(call removeBlacklist)
 	@echo "removed blacklisting of the UT612 LCR meter from $(CP210X_BLACKLIST_DESTFILE)" ; \
 
+.PHONY: prepare
 prepare:
-	apt-get install libudev-dev sed
+	apt-get install libudev-dev sed pkg-config build-essential libusb-1.0-0-dev
 
+.PHONY: prepare-all
+prepare-all: prepare
+	apt-get install libboost-test-dev
+
+.PHONY: clean
 clean:
 	rm -f $(EXECS) $(ut612_OBJS) $(unittest_OBJS)
